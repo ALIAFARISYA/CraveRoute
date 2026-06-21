@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+    <title>FPX Payment Gateway - CraveRoute</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ============================================================
+           GLOBAL
+        ============================================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            background: #f0f7f0;
+            color: #e6f0f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .bank-header {
+            background: linear-gradient(135deg, #0d3b4f 0%, #1a5f72 100%);
+            color: #f5e7c8;
+            width: 100%;
+            max-width: 550px;
+            padding: 18px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 16px 16px 0 0;
+            border-bottom: 2px solid #d4a02b;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
+        }
+
+        .bank-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: clamp(18px, 2.5vw, 22px);
+            font-weight: 800;
+            color: #f5d98f;
+        }
+
+        .bank-logo i {
+            font-size: 28px;
+            color: #fbbf24;
+        }
+
+        .secure-badge {
+            background: rgba(212, 160, 43, 0.2);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: clamp(10px, 1vw, 12px);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #f5d98f;
+            border: 1px solid rgba(212, 160, 43, 0.3);
+        }
+
+        .payment-container {
+            background: #1a5f72;
+            width: 100%;
+            max-width: 550px;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+            animation: slideUp 0.3s ease-out;
+            border: 1px solid rgba(212, 160, 43, 0.2);
+            border-top: none;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .payment-content {
+            padding: 24px;
+        }
+
+        /* ===== MERCHANT INFO ===== */
+        .merchant-info {
+            background: linear-gradient(135deg, #134b5e 0%, #0d3b4f 100%);
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #d4a02b;
+            border: 1px solid #2a6a7a;
+        }
+
+        .merchant-name {
+            font-weight: 700;
+            color: #f5d98f;
+            font-size: clamp(16px, 1.8vw, 18px);
+            margin-bottom: 4px;
+        }
+
+        .merchant-info div:last-child {
+            color: #b0c9d4;
+            font-size: clamp(12px, 1.2vw, 13px);
+        }
+
+        /* ===== TRANSACTION DETAILS ===== */
+        .transaction-details {
+            margin-bottom: 20px;
+            background: #134b5e;
+            border-radius: 12px;
+            padding: 14px 16px;
+            border: 1px solid #2a6a7a;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #1a5f72;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #b0c9d4;
+            font-weight: 600;
+            font-size: clamp(12px, 1.2vw, 13px);
+        }
+
+        .detail-value {
+            color: #e6f0f5;
+            font-weight: 700;
+            font-size: clamp(12px, 1.2vw, 14px);
+        }
+
+        .amount-row {
+            background: linear-gradient(135deg, #0d3b4f, #134b5e);
+            color: #f5d98f;
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            font-size: clamp(17px, 2vw, 20px);
+            font-weight: 700;
+            border: 1px solid #d4a02b;
+        }
+
+        .amount-row span:last-child {
+            color: #fbbf24;
+            font-weight: 900;
+        }
+
+        /* ===== TIMER ===== */
+        .timer {
+            background: #134b5e;
+            border: 2px solid #d4a02b;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin: 16px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .timer i {
+            color: #fbbf24;
+            font-size: 24px;
+        }
+
+        .timer span {
+            color: #b0c9d4;
+            font-weight: 600;
+            font-size: 20px;
+        }
+
+        .time-displays {
+            font-size: 36px;
+            font-weight: 900;
+            color: #f5a0a0;
+            background: #0d3b4f;
+            padding: 6px 18px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            border: 1px solid #2a6a7a;
+        }
+
+        /* ===== LOGIN FORM ===== */
+        .login-form {
+            background: #134b5e;
+            padding: 18px 20px;
+            border-radius: 12px;
+            margin: 16px 0;
+            border: 1px solid #2a6a7a;
+        }
+
+        .form-title {
+            color: #f5d98f;
+            font-weight: 700;
+            font-size: clamp(16px, 1.6vw, 18px);
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .form-title i {
+            color: #fbbf24;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 700;
+            color: #b0c9d4;
+            font-size: clamp(11px, 1.1vw, 13px);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #2a6a7a;
+            border-radius: 10px;
+            font-size: clamp(13px, 1.3vw, 14px);
+            transition: all 0.3s;
+            background: #0d3b4f;
+            color: #e6f0f5;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #d4a02b;
+            box-shadow: 0 0 0 3px rgba(212, 160, 43, 0.2);
+        }
+
+        input::placeholder {
+            color: #7fa3b0;
+        }
+
+        /* ===== REQUEST TAC BUTTON ===== */
+        .request-tac-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #d4a02b, #f5d98f);
+            color: #0a2e3f;
+            border: none;
+            border-radius: 10px;
+            font-size: clamp(14px, 1.4vw, 16px);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .request-tac-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(212, 160, 43, 0.3);
+            background: #f5d98f;
+        }
+
+        .request-tac-btn:disabled {
+            background: #2a5f6f;
+            color: #b0c9d4;
+            cursor: not-allowed;
+        }
+
+        /* ===== TAC SECTION ===== */
+        .tac-section {
+            background: #0d3b4f;
+            border: 2px solid #d4a02b;
+            padding: 16px 18px;
+            border-radius: 12px;
+            margin-top: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tac-title {
+            color: #f5d98f;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: clamp(14px, 1.4vw, 16px);
+        }
+
+        .tac-title i {
+            color: #fbbf24;
+        }
+
+        .tac-section p {
+            font-size: clamp(12px, 1.1vw, 13px);
+            margin-bottom: 12px;
+            color: #f5d98f;
+        }
+
+        .tac-section p i {
+            color: #fbbf24;
+        }
+
+        .tac-input-container {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .tac-input {
+            flex: 2;
+            text-align: center;
+            font-size: clamp(22px, 3vw, 28px);
+            letter-spacing: 8px;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            padding: 12px 10px;
+            min-width: 160px;
+        }
+
+        .tac-input-error {
+            border-color: #f5a0a0 !important;
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .resend-tac {
+            flex: 1;
+            background: #1a5f72;
+            color: #f5d98f;
+            padding: 10px 14px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s;
+            min-width: 90px;
+            border: 1px solid #2a6a7a;
+            font-size: clamp(12px, 1.1vw, 13px);
+        }
+
+        .resend-tac:hover:not(.disabled) {
+            background: #d4a02b;
+            color: #0a2e3f;
+            border-color: #d4a02b;
+        }
+
+        .resend-tac.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tac-timer {
+            font-size: clamp(11px, 1vw, 12px);
+            color: #b0c9d4;
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        .tac-timer span {
+            color: #f5d98f;
+            font-weight: 700;
+        }
+
+        .tac-attempts {
+            font-size: clamp(11px, 1vw, 12px);
+            color: #f5a0a0;
+            margin-top: 6px;
+            text-align: center;
+        }
+
+        .tac-attempts span {
+            font-weight: 700;
+        }
+
+        /* ===== STATUS MESSAGE ===== */
+        .status-message {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin: 12px 0;
+            display: none;
+            font-weight: 600;
+            text-align: center;
+            font-size: clamp(13px, 1.2vw, 14px);
+        }
+
+        .status-message.processing {
+            display: block;
+            background: #1a5f72;
+            color: #b0c9d4;
+            border-left: 4px solid #fbbf24;
+            border: 1px solid #2a6a7a;
+        }
+
+        .status-message.success {
+            display: block;
+            background: #1a5f3a;
+            color: #a5d6a7;
+            border-left: 4px solid #2ecc71;
+            border: 1px solid #2e7d32;
+        }
+
+        .status-message.error {
+            display: block;
+            background: #5a1a1a;
+            color: #f5a0a0;
+            border-left: 4px solid #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+
+        /* ===== ACTION BUTTONS ===== */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .pay-button {
+            flex: 2;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #d4a02b, #f5d98f);
+            color: #0a2e3f;
+            border: none;
+            border-radius: 10px;
+            font-size: clamp(14px, 1.4vw, 16px);
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .pay-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(212, 160, 43, 0.3);
+            background: #f5d98f;
+        }
+
+        .pay-button:disabled {
+            background: #2a5f6f;
+            color: #b0c9d4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .cancel-button {
+            flex: 1;
+            padding: 12px 16px;
+            background: #2a5f6f;
+            color: #e6f0f5;
+            border: none;
+            border-radius: 10px;
+            font-size: clamp(14px, 1.4vw, 16px);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .cancel-button:hover {
+            background: #1a4f5f;
+            transform: translateY(-2px);
+        }
+
+        /* ===== SMS POPUP ===== */
+        .sms-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #134b5e;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            z-index: 1000;
+            width: 320px;
+            animation: popIn 0.3s ease;
+            display: none;
+            border: 1px solid #d4a02b;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .sms-header {
+            background: linear-gradient(135deg, #0d3b4f, #1a5f72);
+            color: #f5d98f;
+            padding: 14px 18px;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #d4a02b;
+        }
+
+        .sms-header i {
+            color: #fbbf24;
+        }
+
+        .sms-body {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .sms-body i {
+            color: #fbbf24;
+        }
+
+        .sms-body p {
+            color: #b0c9d4;
+            font-weight: 600;
+            margin: 8px 0;
+        }
+
+        .sms-code {
+            font-size: clamp(28px, 4vw, 34px);
+            font-weight: 900;
+            color: #f5d98f;
+            letter-spacing: 5px;
+            font-family: 'Courier New', monospace;
+            background: #0d3b4f;
+            padding: 12px;
+            border-radius: 10px;
+            margin: 12px 0;
+            border: 1px solid #2a6a7a;
+        }
+
+        .sms-body p:last-of-type {
+            font-size: clamp(11px, 1vw, 12px);
+            color: #b0c9d4;
+        }
+
+        .sms-close {
+            width: 100%;
+            padding: 10px;
+            background: #d4a02b;
+            color: #0a2e3f;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: clamp(14px, 1.3vw, 15px);
+            transition: all 0.2s;
+        }
+
+        .sms-close:hover {
+            background: #f5d98f;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(2, 20, 30, 0.7);
+            z-index: 999;
+            display: none;
+            backdrop-filter: blur(4px);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 600px) {
+            .payment-content { padding: 16px; }
+            .bank-header { padding: 14px 16px; flex-wrap: wrap; gap: 8px; }
+            .tac-input-container { flex-direction: column; }
+            .resend-tac { width: 100%; }
+            .action-buttons { flex-direction: column; }
+            .bank-logo { font-size: 16px; }
+            .secure-badge { font-size: 10px; padding: 4px 10px; }
+        }
+
+        @media (max-width: 400px) {
+            body { padding: 10px; }
+            .payment-container { border-radius: 0 0 14px 14px; }
+            .bank-header { border-radius: 14px 14px 0 0; }
+            .payment-content { padding: 12px; }
+            .login-form { padding: 14px; }
+            .transaction-details { padding: 10px 12px; }
+            .amount-row { padding: 10px 14px; font-size: 15px; }
+            .timer { padding: 10px 12px; gap: 8px; }
+            .time-displays { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bank-header">
+        <div class="bank-logo">
+            <i class="fas fa-university"></i>
+            <span id="bankNameText">FPX Payment Gateway</span>
+        </div>
+        <div class="secure-badge">
+            <i class="fas fa-lock"></i> SECURE CONNECTION
+        </div>
+    </div>
+    
+    <div class="payment-container">
+        <div class="payment-content">
+            <div class="merchant-info">
+                <div class="merchant-name">Merchant: CraveRoute Elite</div>
+                <div>Transaction via FPX (Financial Process Exchange)</div>
+            </div>
+            
+            <div class="transaction-details">
+                <div class="detail-row">
+                    <div class="detail-label">Reference Number</div>
+                    <div class="detail-value" id="refNumber">-</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Transaction Date & Time</div>
+                    <div class="detail-value" id="transDateTime">-</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Order ID</div>
+                    <div class="detail-value" id="orderId">-</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Merchant Name</div>
+                    <div class="detail-value">CraveRoute Elite Sdn Bhd</div>
+                </div>
+                <div class="amount-row">
+                    <span>Amount to Pay:</span>
+                    <span id="amountToPay">RM 0.00</span>
+                </div>
+            </div>
+            
+            <div class="timer">
+                <span>Time remaining:</span>
+                <span class="time-displays" id="timeDisplay">10:00</span>
+            </div>
+            
+            <div class="login-form">
+                <div class="form-title">
+                    <i class="fas fa-shield-alt"></i> Secure Login to Your Bank
+                </div>
+                
+                <div class="form-group">
+                    <label for="username">Username / User ID</label>
+                    <input type="text" id="username" placeholder="Enter your online banking username">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password">
+                </div>
+                
+                <button class="request-tac-btn" id="requestTacBtn" onclick="requestTAC()">
+                    <i class="fas fa-mobile-alt"></i>
+                    Request TAC (Transaction Authorization Code)
+                </button>
+                
+                <div class="tac-section" id="tacSection" style="display: none;">
+                    <div class="tac-title">
+                        <i class="fas fa-key"></i>
+                        Enter TAC Code
+                    </div>
+                    <p>
+                        <i class="fas fa-info-circle"></i>
+                        A 6-digit TAC has been sent to your registered mobile number
+                    </p>
+                    <div class="tac-input-container">
+                        <input type="text" id="tacCode" class="tac-input" placeholder="000000" maxlength="6" autocomplete="off" onkeyup="validateTACInput(this)">
+                        <div class="resend-tac" id="resendTacBtn" onclick="resendTAC()">
+                            <i class="fas fa-redo"></i> Resend TAC
+                        </div>
+                    </div>
+                    <div class="tac-timer">TAC expires in: <span id="tacExpiryTime">05:00</span></div>
+                    <div class="tac-attempts">Remaining attempts: <span id="attemptCount">3</span></div>
+                </div>
+            </div>
+            
+            <div class="status-message" id="statusMessage" style="display: none;"></div>
+           
+            <div class="action-buttons">
+                <button class="cancel-button" onclick="cancelFPXPayment()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="pay-button" id="payButton" onclick="verifyAndPay()" disabled>
+                    <i class="fas fa-lock"></i>
+                    Confirm & Pay
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SMS Simulation Popup -->
+    <div class="overlay" id="overlay"></div>
+    <div class="sms-popup" id="smsPopup">
+        <div class="sms-header">
+            <i class="fas fa-envelope"></i>
+            <strong>SMS from Bank</strong>
+        </div>
+        <div class="sms-body">
+            <i class="fas fa-mobile-alt" style="font-size: 36px;"></i>
+            <p>Your TAC code is:</p>
+            <div class="sms-code" id="smsCode">000000</div>
+            <p>Valid for 5 minutes</p>
+            <button class="sms-close" onclick="closeSMSPopup()">OK, I got it</button>
+        </div>
+    </div>
+
+    <script>
+        let timerInterval;
+        let tacTimerInterval;
+        let timeLeft = 600;
+        let tacExpiryTime = 300;
+        let tacCode = null;
+        let tacGenerated = false;
+        let tacAttempts = 3;
+        let paymentData = null;
+        let isPaymentProcessing = false;
+
+        function getPaymentData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return {
+                orderId: urlParams.get('orderId'),
+                amount: parseFloat(urlParams.get('amount')),
+                customerName: urlParams.get('customerName'),
+                orderDate: urlParams.get('orderDate'),
+                customerPhone: urlParams.get('customerPhone') || '+60 12-345 6789'
+            };
+        }
+
+        function initPayment() {
+            console.log('Initializing payment...');
+            paymentData = getPaymentData();
+            
+            const bankSelection = localStorage.getItem('fpx_bank_selection');
+            if (bankSelection) {
+                try {
+                    const bankInfo = JSON.parse(bankSelection);
+                    const bankNameSpan = document.getElementById('bankNameText');
+                    if (bankNameSpan) {
+                        bankNameSpan.textContent = `${bankInfo.bank.name} FPX`;
+                    }
+                    console.log('Bank selected:', bankInfo.bank.name);
+                } catch(e) {
+                    console.error('Error parsing bank selection:', e);
+                }
+            }
+            
+            const refNum = 'FPX' + Date.now() + Math.floor(Math.random() * 10000);
+            const now = new Date();
+            
+            const refNumberEl = document.getElementById('refNumber');
+            const transDateTimeEl = document.getElementById('transDateTime');
+            const orderIdEl = document.getElementById('orderId');
+            const amountToPayEl = document.getElementById('amountToPay');
+            
+            if (refNumberEl) refNumberEl.textContent = refNum;
+            if (transDateTimeEl) transDateTimeEl.textContent = now.toLocaleString('en-MY');
+            if (orderIdEl) orderIdEl.textContent = paymentData.orderId || 'N/A';
+            if (amountToPayEl) amountToPayEl.textContent = 'RM ' + (paymentData.amount || 0).toFixed(2);
+            
+            console.log('Payment initialized:', {
+                refNum,
+                orderId: paymentData.orderId,
+                amount: paymentData.amount
+            });
+            
+            startTimer();
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showMessage('Payment session has expired. Please try again.', 'error');
+                    const payBtn = document.getElementById('payButton');
+                    const reqBtn = document.getElementById('requestTacBtn');
+                    if (payBtn) payBtn.disabled = true;
+                    if (reqBtn) reqBtn.disabled = true;
+                } else {
+                    timeLeft--;
+                    const minutes = Math.floor(timeLeft / 60);
+                    const seconds = timeLeft % 60;
+                    const timeDisplay = document.getElementById('timeDisplay');
+                    if (timeDisplay) {
+                        timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                }
+            }, 1000);
+        }
+
+        function startTACTimer() {
+            tacExpiryTime = 300;
+            if (tacTimerInterval) clearInterval(tacTimerInterval);
+            
+            tacTimerInterval = setInterval(() => {
+                if (tacExpiryTime <= 0) {
+                    clearInterval(tacTimerInterval);
+                    const expirySpan = document.getElementById('tacExpiryTime');
+                    if (expirySpan) expirySpan.textContent = '00:00';
+                    showMessage('TAC has expired. Please request a new TAC.', 'error');
+                    const payBtn = document.getElementById('payButton');
+                    if (payBtn) payBtn.disabled = true;
+                    tacGenerated = false;
+                } else {
+                    tacExpiryTime--;
+                    const minutes = Math.floor(tacExpiryTime / 60);
+                    const seconds = tacExpiryTime % 60;
+                    const expirySpan = document.getElementById('tacExpiryTime');
+                    if (expirySpan) {
+                        expirySpan.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                }
+            }, 1000);
+        }
+
+        function generateRandomTAC() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        function showSMSPopup(code) {
+            const smsCodeSpan = document.getElementById('smsCode');
+            const overlay = document.getElementById('overlay');
+            const smsPopup = document.getElementById('smsPopup');
+            if (smsCodeSpan) smsCodeSpan.textContent = code;
+            if (overlay) overlay.style.display = 'block';
+            if (smsPopup) smsPopup.style.display = 'block';
+        }
+
+        function closeSMSPopup() {
+            const overlay = document.getElementById('overlay');
+            const smsPopup = document.getElementById('smsPopup');
+            if (overlay) overlay.style.display = 'none';
+            if (smsPopup) smsPopup.style.display = 'none';
+        }
+
+        function requestTAC() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            if (!username || !password) {
+                showMessage('Please enter your username and password', 'error');
+                return;
+            }
+            
+            showMessage('Verifying credentials and sending TAC...', 'processing');
+            
+            setTimeout(() => {
+                tacCode = generateRandomTAC();
+                tacGenerated = true;
+                tacAttempts = 3;
+                
+                console.log('TAC Code generated:', tacCode);
+                
+                showSMSPopup(tacCode);
+                
+                const tacSection = document.getElementById('tacSection');
+                const statusMsg = document.getElementById('statusMessage');
+                const payBtn = document.getElementById('payButton');
+                const tacInput = document.getElementById('tacCode');
+                const attemptSpan = document.getElementById('attemptCount');
+                
+                if (tacSection) tacSection.style.display = 'block';
+                if (statusMsg) statusMsg.style.display = 'none';
+                if (payBtn) payBtn.disabled = false;
+                if (tacInput) tacInput.value = '';
+                if (attemptSpan) attemptSpan.textContent = tacAttempts;
+                
+                startTACTimer();
+                
+                showMessage('TAC has been sent to your registered mobile number.', 'success');
+                
+                setTimeout(() => {
+                    const msgDiv = document.getElementById('statusMessage');
+                    if (msgDiv && msgDiv.style.display !== 'none' && msgDiv.className.includes('success')) {
+                        msgDiv.style.display = 'none';
+                    }
+                }, 3000);
+            }, 2000);
+        }
+
+        function resendTAC() {
+            const resendBtn = document.getElementById('resendTacBtn');
+            if (resendBtn && resendBtn.classList.contains('disabled')) {
+                showMessage('Please wait before requesting another TAC', 'error');
+                return;
+            }
+            
+            showMessage('Resending TAC...', 'processing');
+            
+            if (resendBtn) {
+                resendBtn.classList.add('disabled');
+                setTimeout(() => {
+                    resendBtn.classList.remove('disabled');
+                }, 30000);
+            }
+            
+            setTimeout(() => {
+                tacCode = generateRandomTAC();
+                tacAttempts = 3;
+                
+                console.log('New TAC Code:', tacCode);
+                
+                showSMSPopup(tacCode);
+                
+                const attemptSpan = document.getElementById('attemptCount');
+                const tacInput = document.getElementById('tacCode');
+                if (attemptSpan) attemptSpan.textContent = tacAttempts;
+                if (tacInput) {
+                    tacInput.value = '';
+                    tacInput.classList.remove('tac-input-error');
+                }
+                
+                startTACTimer();
+                
+                showMessage('New TAC has been sent to your registered mobile number.', 'success');
+                
+                setTimeout(() => {
+                    const msgDiv = document.getElementById('statusMessage');
+                    if (msgDiv && msgDiv.style.display !== 'none' && msgDiv.className.includes('success')) {
+                        msgDiv.style.display = 'none';
+                    }
+                }, 3000);
+            }, 1500);
+        }
+
+        function validateTACInput(input) {
+            if (input) {
+                input.value = input.value.replace(/[^0-9]/g, '');
+                if (input.value.length === 6) {
+                    input.classList.remove('tac-input-error');
+                }
+            }
+        }
+
+        function verifyAndPay() {
+            if (isPaymentProcessing) return;
+            
+            const enteredTac = document.getElementById('tacCode').value.trim();
+            const tacInput = document.getElementById('tacCode');
+            
+            if (!tacGenerated) {
+                showMessage('Please request TAC first', 'error');
+                return;
+            }
+            
+            if (!enteredTac || enteredTac.length !== 6) {
+                showMessage('Please enter a valid 6-digit TAC code', 'error');
+                if (tacInput) tacInput.classList.add('tac-input-error');
+                return;
+            }
+            
+            if (enteredTac !== tacCode) {
+                tacAttempts--;
+                const attemptSpan = document.getElementById('attemptCount');
+                if (attemptSpan) attemptSpan.textContent = tacAttempts;
+                if (tacInput) tacInput.classList.add('tac-input-error');
+                
+                if (tacAttempts <= 0) {
+                    showMessage('Too many invalid attempts. Please request a new TAC.', 'error');
+                    const payBtn = document.getElementById('payButton');
+                    if (payBtn) payBtn.disabled = true;
+                    tacGenerated = false;
+                    setTimeout(() => {
+                        const reqBtn = document.getElementById('requestTacBtn');
+                        if (reqBtn) reqBtn.click();
+                    }, 2000);
+                } else {
+                    showMessage(`Invalid TAC code. ${tacAttempts} attempt(s) remaining.`, 'error');
+                }
+                return;
+            }
+            
+            processPayment();
+        }
+
+        function processPayment() {
+            isPaymentProcessing = true;
+            
+            showMessage('Processing payment... Please do not close this window.', 'processing');
+            const payBtn = document.getElementById('payButton');
+            const reqBtn = document.getElementById('requestTacBtn');
+            if (payBtn) payBtn.disabled = true;
+            if (reqBtn) reqBtn.disabled = true;
+            
+            setTimeout(() => {
+                clearInterval(timerInterval);
+                clearInterval(tacTimerInterval);
+                
+                const transactionId = 'TXN' + Date.now() + Math.floor(Math.random() * 10000);
+                const referenceNumber = 'REF' + Math.floor(Math.random() * 1000000000);
+                
+                let bankName = 'FPX';
+                try {
+                    const bankSelection = localStorage.getItem('fpx_bank_selection');
+                    if (bankSelection) {
+                        const bankInfo = JSON.parse(bankSelection);
+                        bankName = bankInfo.bank?.name || 'FPX';
+                    }
+                } catch(e) {}
+                
+                const paymentResult = {
+                    success: true,
+                    transactionId: transactionId,
+                    referenceNumber: referenceNumber,
+                    orderId: paymentData.orderId,
+                    amount: paymentData.amount,
+                    customerName: paymentData.customerName,
+                    customerPhone: paymentData.customerPhone,
+                    bank: bankName,
+                    timestamp: new Date().toISOString(),
+                    status: 'COMPLETED'
+                };
+                
+                localStorage.setItem('fpx_payment_result', JSON.stringify(paymentResult));
+                
+                const pendingOrder = localStorage.getItem('pending_order');
+                if (pendingOrder) {
+                    try {
+                        const order = JSON.parse(pendingOrder);
+                        order.transactionId = transactionId;
+                        order.paymentStatus = 'COMPLETED';
+                        order.paymentDetails = paymentResult;
+                        localStorage.setItem('confirmed_order', JSON.stringify(order));
+                    } catch(e) {}
+                }
+                
+                showMessage('Payment successful!', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = `orderConfirmation.html?orderId=${paymentData.orderId}&transactionId=${transactionId}&amount=${paymentData.amount}`;
+                }, 1500);
+            }, 3000);
+        }
+
+        function cancelFPXPayment() {
+            if (confirm('Are you sure you want to cancel this payment?')) {
+                clearInterval(timerInterval);
+                clearInterval(tacTimerInterval);
+                
+                const paymentResult = {
+                    success: false,
+                    orderId: paymentData?.orderId,
+                    reason: 'User cancelled'
+                };
+                
+                localStorage.setItem('fpx_payment_result', JSON.stringify(paymentResult));
+                localStorage.removeItem('pending_order');
+                
+                window.location.href = 'index.html';
+            }
+        }
+
+        function showMessage(message, type) {
+            const msgDiv = document.getElementById('statusMessage');
+            if (msgDiv) {
+                msgDiv.textContent = message;
+                msgDiv.className = `status-message ${type}`;
+                msgDiv.style.display = 'block';
+            }
+            
+            if (type !== 'processing') {
+                setTimeout(() => {
+                    if (msgDiv && msgDiv.style.display !== 'none') {
+                        msgDiv.style.display = 'none';
+                    }
+                }, 5000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initPayment);
+    </script>
+</body>
+</html>
